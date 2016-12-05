@@ -20,6 +20,9 @@ import os
 import inference
 import visualize
 
+#get this current directory
+this_current_directory = os.getcwd()
+
 # prepare data and tf.session
 mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 sess = tf.InteractiveSession()
@@ -60,11 +63,11 @@ if new:
             print ('step %d: loss %.3f' % (step, loss_v))
 
         if step % 1000 == 0 and step > 0:
-            saver.save(sess, 'model.ckpt')
+            saver.save(sess, os.path.join(this_current_directory,'model.ckpt'))
             embed = siamese.o1.eval({siamese.x1: mnist.test.images})
-            embed.tofile('embed.txt')
+            embed.tofile(os.path.join(this_current_directory,'embed.txt'))
 else:
-    saver.restore(sess, 'model.ckpt')
+    saver.restore(sess, os.path.join(this_current_directory,'model.ckpt'))
 
 # visualize result
 x_test = mnist.test.images.reshape([-1, 28, 28])
