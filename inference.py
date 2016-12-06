@@ -152,9 +152,9 @@ class siamese_tl2:
         self.y_ = tf.placeholder(tf.float32, [None])
         self.loss = self.loss_with_spring()
 
-    def network(self, x):
+    def network(self, x, reuse):
         # Define the neural network structure
-        with tf.variable_scope("siamese", reuse=False):
+        with tf.variable_scope("siamese", reuse=reuse):
             tl.layers.set_name_reuse(reuse)
             network = tl.layers.InputLayer(x, name='input_layer')
 
