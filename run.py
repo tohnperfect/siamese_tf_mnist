@@ -16,6 +16,8 @@ import tensorflow as tf
 import numpy as np
 import os
 
+import sys
+
 #import helpers
 import inference
 import visualize
@@ -33,13 +35,19 @@ train_step = tf.train.GradientDescentOptimizer(0.01).minimize(siamese.loss)
 saver = tf.train.Saver()
 tf.initialize_all_variables().run()
 
+# for tensorboard
+summary_writer = tf.train.SummaryWriter(os.path.join(this_current_directory,'log\\'), graph_def=sess.graph_def)
+
 # if you just want to load a previously trainmodel?
 new = True
-model_ckpt = 'model.ckpt'
+model_ckpt = os.path.join(this_current_directory,'model.ckpt')
 if os.path.isfile(model_ckpt):
     input_var = None
     while input_var not in ['yes', 'no']:
-        input_var = raw_input("We found model.ckpt file. Do you want to load it [yes/no]?")
+        if sys.version_info[0] >= 3:
+            input_var = input("We found model.ckpt file. Do you want to load it [yes/no]?")
+        else:
+            input_var = raw_input("We found model.ckpt file. Do you want to load it [yes/no]?")
     if input_var == 'yes':
         new = False
 
@@ -63,7 +71,7 @@ if new:
             print ('step %d: loss %.3f' % (step, loss_v))
 
         if step % 1000 == 0 and step > 0:
-            saver.save(sess, os.path.join(this_current_directory,'model.ckpt'))
+            saver.save(sess, this_current_directory)
             embed = siamese.o1.eval({siamese.x1: mnist.test.images})
             embed.tofile(os.path.join(this_current_directory,'embed.txt'))
 else:
