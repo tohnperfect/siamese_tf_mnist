@@ -6,3 +6,4 @@ embed.txt
 *.pyc
 *.*~
 model.ckpt*
+events.out.*

@@ -31,7 +31,7 @@ mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 sess = tf.InteractiveSession()
 
 # setup siamese network
-siamese = inference.siamese_tl();
+siamese = inference.siamese_tl2();
 train_step = tf.train.GradientDescentOptimizer(0.01).minimize(siamese.loss)
 saver = tf.train.Saver()
 tf.initialize_all_variables().run()
@@ -72,7 +72,7 @@ if new:
             print ('step %d: loss %.3f' % (step, loss_v))
 
         if step % 1000 == 0 and step > 0:
-            saver.save(sess, this_current_directory)
+            saver.save(sess, os.path.join(this_current_directory,'model.ckpt'))
             embed = siamese.o1.eval({siamese.x1: mnist.test.images})
             embed.tofile(os.path.join(this_current_directory,'embed.txt'))
 else:
