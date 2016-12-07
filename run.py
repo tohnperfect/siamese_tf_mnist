@@ -36,11 +36,11 @@ saver = tf.train.Saver()
 tf.initialize_all_variables().run()
 
 # for tensorboard
-summary_writer = tf.train.SummaryWriter(os.path.join(this_current_directory,'log\\'), graph_def=sess.graph_def)
+summary_writer = tf.train.SummaryWriter(this_current_directory, graph_def=sess.graph_def)
 
 # if you just want to load a previously trainmodel?
 new = True
-model_ckpt = os.path.join(this_current_directory,'model.ckpt')
+model_ckpt = os.path.join(this_current_directory,'model.ckpt.meta')
 if os.path.isfile(model_ckpt):
     input_var = None
     while input_var not in ['yes', 'no']:
@@ -76,6 +76,9 @@ if new:
             embed.tofile(os.path.join(this_current_directory,'embed.txt'))
 else:
     saver.restore(sess, os.path.join(this_current_directory,'model.ckpt'))
+
+    embed = np.fromfile(os.path.join(this_current_directory,'embed.txt'), dtype=np.float32)
+    embed = embed.reshape([-1, 2])
 
 # visualize result
 x_test = mnist.test.images.reshape([-1, 28, 28])
