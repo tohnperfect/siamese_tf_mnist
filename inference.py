@@ -270,5 +270,5 @@ class siamese_tl3:
         return loss
     
     def train(self, X_train, y_train):
-        err, _ = sess.run([loss, train_op], feed_dict={self.x: X_train, self.y_:y_train})
+        err, _ = sess.run([self.loss, self.train_op], feed_dict={self.x: X_train, self.y_:y_train})
         
