@@ -1,3 +1,4 @@
+
 """ Siamese implementation using Tensorflow with MNIST example.
 This siamese network embeds a 28x28 image (a point in 784D) 
 into a point in 2D.
@@ -22,6 +23,8 @@ import sys
 import inference
 import visualize
 
+import code
+
 #get this current directory
 this_current_directory = os.getcwd()
 
@@ -30,13 +33,14 @@ mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 sess = tf.InteractiveSession()
 
 # setup siamese network
-siamese = inference.siamese_tl2();
+batch_size = 256
+siamese = inference.siamese_tl3(batch_size);
 train_step = tf.train.GradientDescentOptimizer(0.01).minimize(siamese.loss)
 saver = tf.train.Saver()
 tf.initialize_all_variables().run()
 
 # for tensorboard
-summary_writer = tf.train.SummaryWriter(this_current_directory, graph_def=sess.graph_def)
+#summary_writer = tf.train.SummaryWriter(this_current_directory, graph_def=sess.graph_def)
 
 # if you just want to load a previously trainmodel?
 new = True
@@ -54,13 +58,12 @@ if os.path.isfile(model_ckpt):
 # start training
 if new:
     for step in range(100000):
-        batch_x1, batch_y1 = mnist.train.next_batch(128)
-        batch_x2, batch_y2 = mnist.train.next_batch(128)
+        batch_x1, batch_y1 = mnist.train.next_batch(batch_size)
+        batch_x2, batch_y2 = mnist.train.next_batch(batch_size)
         batch_y = (batch_y1 == batch_y2).astype('float')
 
         _, loss_v = sess.run([train_step, siamese.loss], feed_dict={
-                            siamese.x1: batch_x1, 
-                            siamese.x2: batch_x2, 
+                            siamese.x: np.vstack((batch_x1,batch_x2)),  
                             siamese.y_: batch_y})
 
         if np.isnan(loss_v):
@@ -72,7 +75,7 @@ if new:
 
         if step % 1000 == 0 and step > 0:
             saver.save(sess, os.path.join(this_current_directory,'model.ckpt'))
-            embed = siamese.o1.eval({siamese.x1: mnist.test.images})
+            embed = siamese.o_.eval({siamese.x_: mnist.test.images})
             embed.tofile(os.path.join(this_current_directory,'embed.txt'))
 else:
     saver.restore(sess, os.path.join(this_current_directory,'model.ckpt'))
@@ -80,6 +83,7 @@ else:
     embed = np.fromfile(os.path.join(this_current_directory,'embed.txt'), dtype=np.float32)
     embed = embed.reshape([-1, 2])
 
+#code.interact(local=dict(globals(),**locals()))
 # visualize result
 x_test = mnist.test.images.reshape([-1, 28, 28])
 visualize.visualize(embed, x_test)

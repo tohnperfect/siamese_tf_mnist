@@ -211,15 +211,16 @@ class siamese_tl2:
 class siamese_tl3:
 
     # Create model
-    def __init__(self):
-        batch_size = 20 # actually it is 10, 0~10 are x1,  11~20 are x2
-        self.x = tf.placeholder(tf.float32, [batch_size, 784])
-        self.h = self.network(self.x, reuse=False) 
-        self.o = self.network2(self.h[0:batch_size/2], self.h[batch_size/2:])
-                                        
+    def __init__(self,batch_size):
+        #batch_size = 20 # actually it is 10, 0~10 are x1,  11~20 are x2
+        self.x = tf.placeholder(tf.float32, [2*batch_size, 784])
+        self.o = self.network(self.x, reuse=False) 
+        #self.o = self.network2(self.h[0:batch_size/2], self.h[batch_size/2:])
+        self.x_ = tf.placeholder(tf.float32, [None, 784])
+        self.o_ = self.network(self.x_, reuse=True)                                        
         # Create loss
-        self.y_ = tf.placeholder(tf.float32, [batch_size/2])
-        self.loss = self.loss_with_spring()
+        self.y_ = tf.placeholder(tf.float32, [batch_size])
+        self.loss = self.loss_with_spring(batch_size)
 
     def network(self, x, reuse):
         # Define the neural network structure
@@ -228,7 +229,8 @@ class siamese_tl3:
             network = tl.layers.InputLayer(x, name='input_layer')
             network = tl.layers.DenseLayer(network, n_units=1024, act = tf.nn.relu, name='relu1')
             network = tl.layers.DenseLayer(network, n_units=1024, act = tf.nn.relu, name='relu2')
-            network = tl.layers.DenseLayer(network, n_units=1024, act = tf.identity, name='relu3')
+            network = tl.layers.DenseLayer(network, n_units=2, act = tf.identity, name='output_layer')
+            #network = tl.layers.DenseLayer(network, n_units=1024, act = tf.identity, name='relu3')
         return network.outputs
 
     def network2(self, x1, x2):
@@ -238,11 +240,11 @@ class siamese_tl3:
         network = tl.layers.DenseLayer(network, n_units=2, act = tf.identity, name='output_layer')
         return network.outputs
                                         
-    def loss_with_spring(self):
+    def loss_with_spring(self,batch_size):
         margin = 5.0
         labels_t = self.y_
         labels_f = tf.sub(1.0, self.y_, name="1-yi")          # labels_ = !labels;
-        eucd2 = tf.pow(tf.sub(self.o1, self.o2), 2)
+        eucd2 = tf.pow(tf.sub(self.o[:batch_size], self.o[batch_size:]), 2)
         eucd2 = tf.reduce_sum(eucd2, 1)
         eucd = tf.sqrt(eucd2+1e-6, name="eucd")
         C = tf.constant(margin, name="C")
@@ -269,6 +271,6 @@ class siamese_tl3:
         loss = tf.reduce_mean(losses, name="loss")
         return loss
     
-    def train(self, X_train, y_train):
-        err, _ = sess.run([self.loss, self.train_op], feed_dict={self.x: X_train, self.y_:y_train})
+    # def train(self, X_train, y_train):
+    #     err, _ = sess.run([self.loss, self.train_op], feed_dict={self.x: X_train, self.y_:y_train})
         
