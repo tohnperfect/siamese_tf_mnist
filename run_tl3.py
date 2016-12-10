@@ -37,7 +37,7 @@ batch_size = 256
 siamese = inference.siamese_tl3(batch_size);
 train_step = tf.train.GradientDescentOptimizer(0.01).minimize(siamese.loss)
 saver = tf.train.Saver()
-tf.initialize_all_variables().run()
+tf.global_variables_initializer().run()
 
 # for tensorboard
 #summary_writer = tf.train.SummaryWriter(this_current_directory, graph_def=sess.graph_def)
@@ -75,7 +75,7 @@ if new:
 
         if step % 1000 == 0 and step > 0:
             saver.save(sess, os.path.join(this_current_directory,'model.ckpt'))
-            embed = siamese.o_.eval({siamese.x_: mnist.test.images})
+            embed = siamese.predict(mnist.test.images, sess)
             embed.tofile(os.path.join(this_current_directory,'embed.txt'))
 else:
     saver.restore(sess, os.path.join(this_current_directory,'model.ckpt'))

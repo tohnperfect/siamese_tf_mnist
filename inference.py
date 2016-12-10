@@ -215,12 +215,18 @@ class siamese_tl3:
         #batch_size = 20 # actually it is 10, 0~10 are x1,  11~20 are x2
         self.x = tf.placeholder(tf.float32, [2*batch_size, 784])
         self.o = self.network(self.x, reuse=False) 
-        #self.o = self.network2(self.h[0:batch_size/2], self.h[batch_size/2:])
+
+
         self.x_ = tf.placeholder(tf.float32, [None, 784])
-        self.o_ = self.network(self.x_, reuse=True)                                        
+        self.o_ = self.network(self.x_, reuse=True)   
+
         # Create loss
         self.y_ = tf.placeholder(tf.float32, [batch_size])
         self.loss = self.loss_with_spring(batch_size)
+
+    def predict(self, image, sess):
+        #return self.o_.eval({self.x_: image})
+        return sess.run(self.o_, feed_dict={self.x_: image})
 
     def network(self, x, reuse):
         # Define the neural network structure
@@ -233,14 +239,8 @@ class siamese_tl3:
             #network = tl.layers.DenseLayer(network, n_units=1024, act = tf.identity, name='relu3')
         return network.outputs
 
-    def network2(self, x1, x2):
-        net1 = tl.layers.InputLayer(x1, name='input_x1')   
-        net2 = tl.layers.InputLayer(x2, name='input_x2')
-        network = tl.layers.ConcatLayer([net1, net2], name='concat')  
-        network = tl.layers.DenseLayer(network, n_units=2, act = tf.identity, name='output_layer')
-        return network.outputs
                                         
-    def loss_with_spring(self,batch_size):
+    def loss_with_spring(self,batch_size): #contrastive loss
         margin = 5.0
         labels_t = self.y_
         labels_f = tf.sub(1.0, self.y_, name="1-yi")          # labels_ = !labels;
@@ -255,7 +255,7 @@ class siamese_tl3:
         neg = tf.mul(labels_f, tf.pow(tf.maximum(tf.sub(C, eucd), 0), 2), name="Nyi_x_C-eucd_xx_2")
         losses = tf.add(pos, neg, name="losses")
         loss = tf.reduce_mean(losses, name="loss")
-        return loss
+        return 0.5*loss
 
     def loss_with_step(self):
         margin = 5.0
